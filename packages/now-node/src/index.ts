@@ -1,3 +1,4 @@
+import { satisfies } from 'semver';
 import { Assets, NccOptions } from '@zeit/ncc';
 import { join, dirname, relative, sep, resolve } from 'path';
 import { NccWatcher, WatcherResult } from '@zeit/ncc-watcher';
@@ -61,6 +62,15 @@ async function downloadInstallAndBundle({
   console.log("installing dependencies for user's code...");
   const entrypointFsDirname = join(workPath, dirname(entrypoint));
   const nodeVersion = await getNodeVersion(entrypointFsDirname);
+
+  if (meta.isDev && !satisfies(process.version, nodeVersion.range)) {
+    console.log(
+      `WARN: Your current version of \`node\` (${
+        process.version
+      }) does not match the requested range (${nodeVersion.range})`
+    );
+  }
+
   const spawnOpts = getSpawnOptions(meta, nodeVersion);
   await runNpmInstall(entrypointFsDirname, ['--prefer-offline'], spawnOpts);
 
